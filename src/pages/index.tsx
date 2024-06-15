@@ -1,4 +1,5 @@
 import Auth from "@/components/auth";
+import MainLayout from "@/components/layouts/main-layout";
 import { Button } from "@/components/ui/button";
 import { mockData } from "@/lib/utils";
 import Link from "next/link";
@@ -8,23 +9,13 @@ export default function Home() {
   const router = useRouter();
 
   return (
-    <div className="mx-auto flex w-full max-w-screen-xl flex-col items-center justify-center">
-      <header className="flex w-full items-center justify-between bg-slate-200 p-10">
-        <div>
-          <Link href={"/admin"}>Admin Dashboard</Link>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Auth />
-        </div>
-      </header>
-      <div className="my-4 flex flex-row flex-wrap justify-center gap-6">
+    <MainLayout>
+      <div className="my-4 flex flex-wrap gap-6">
         {mockData.map((product) => (
-          <div
+          <Link
             key={product.id}
-            onClick={async () => {
-              await router.push(`/${product.slug}`);
-            }}
-            className="flex max-w-96 flex-col items-start gap-6 rounded-xl border border-gray-300 bg-white p-4 shadow-lg"
+            href={`/${product.slug}`}
+            className="flex max-w-96 flex-col items-start gap-6 rounded-xl border border-gray-300 bg-white p-4 shadow-lg hover:border-black"
           >
             <div>
               <img
@@ -36,9 +27,9 @@ export default function Home() {
             <div>{product.name}</div>
             <div>{product.description}</div>
             <div>Available Quantity: {product.quantityAvailable}</div>
-          </div>
+          </Link>
         ))}
       </div>
-    </div>
+    </MainLayout>
   );
 }
