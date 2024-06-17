@@ -1,12 +1,19 @@
 import Auth from "@/components/auth";
 import MainLayout from "@/components/layouts/main-layout";
 import { Button } from "@/components/ui/button";
+import { AuthContext } from "@/contexts/auth-context";
 import { mockData } from "@/lib/utils";
+import { createClient } from "@/utils";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useContext, useEffect } from "react";
 
 export default function Home() {
   const router = useRouter();
+
+  const { user } = useContext(AuthContext);
+
+  console.log({ user });
 
   return (
     <MainLayout>
