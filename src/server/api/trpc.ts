@@ -6,12 +6,16 @@
  * TL;DR - This is where all the tRPC server stuff is created and plugged in. The pieces you will
  * need to use are documented accordingly near the end.
  */
-import { initTRPC } from "@trpc/server";
+import { TRPCError, initTRPC } from "@trpc/server";
 import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
 import { db } from "@/server/db";
+import createClient from "@/utils/supabase-api-client";
+import { User } from "@supabase/supabase-js";
+import { users } from "../db/schema";
+import { eq } from "drizzle-orm";
 
 /**
  * 1. CONTEXT
@@ -21,7 +25,9 @@ import { db } from "@/server/db";
  * These allow you to access things when processing a request, like the database, the session, etc.
  */
 
-type CreateContextOptions = Record<string, never>;
+type CreateContextOptions = {
+  user: User | null;
+};
 
 /**
  * This helper generates the "internals" for a tRPC context. If you need to use it, you can export
@@ -36,6 +42,7 @@ type CreateContextOptions = Record<string, never>;
 const createInnerTRPCContext = (_opts: CreateContextOptions) => {
   return {
     db,
+    user: _opts.user,
   };
 };
 
@@ -45,8 +52,13 @@ const createInnerTRPCContext = (_opts: CreateContextOptions) => {
  *
  * @see https://trpc.io/docs/context
  */
-export const createTRPCContext = (_opts: CreateNextContextOptions) => {
-  return createInnerTRPCContext({});
+export const createTRPCContext = async (_opts: CreateNextContextOptions) => {
+  const supabase = createClient(_opts.req, _opts.res);
+  const getUser = await supabase.auth.getUser();
+
+  return createInnerTRPCContext({
+    user: getUser.data.user,
+  });
 };
 
 /**
@@ -100,3 +112,30 @@ export const createTRPCRouter = t.router;
  * are logged in.
  */
 export const publicProcedure = t.procedure;
+
+export const protectedProcedure = t.procedure.use((opts) => {
+  if (!opts.ctx.user) {
+    throw new TRPCError({ code: "UNAUTHORIZED", message: "not authorized!" });
+  }
+
+  return opts.next({
+    ctx: { ...opts.ctx, user: opts.ctx.user },
+  });
+});
+
+export const adminProcedure = protectedProcedure.use(async (opts) => {
+  const [foundUser] = await opts.ctx.db
+    .select()
+    .from(users)
+    .where(eq(users.id, opts.ctx.user.id))
+    .limit(1);
+
+  if (!foundUser?.isAdmin) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "you are not allowed here, please don't hack us!",
+    });
+  }
+
+  return opts.next();
+});

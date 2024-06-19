@@ -1,6 +1,6 @@
 import { GeistSans } from "geist/font/sans";
 import { type AppType } from "next/app";
-
+import { Toaster } from "sonner";
 import { api } from "@/utils/api";
 
 import "@/styles/globals.css";
@@ -11,6 +11,7 @@ const MyApp: AppType = ({ Component, pageProps }) => {
     <AuthContextProvider>
       <main className={GeistSans.className}>
         <Component {...pageProps} />
+        <Toaster richColors position="top-center" />
       </main>
     </AuthContextProvider>
   );

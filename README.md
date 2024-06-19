@@ -1,4 +1,10 @@
+## supabase auth
+
 https://supabase.com/docs/guides/auth/server-side/nextjs?router=pages
+
+## stripe webhook
+
+https://vercel.com/guides/getting-started-with-nextjs-typescript-stripe
 
 # Create T3 App
 
